@@ -30,7 +30,7 @@ dudt = FastChain(
 
 θ = initial_params(dudt)
 
-k = 32
+k = 2
 train_loader = Flux.Data.DataLoader(trainData, batchsize = k, shuffle=true)
 
 function predict_node(batch)

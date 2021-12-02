@@ -1,0 +1,15 @@
+indicatorDataSource,indicatorId,indicatorName,regionId,regionLevel,regionName,date,value,trend,delta,change,refDate,refValue
+safegraph,bars_visit_prop,Bar Visits,AL,state,Alabama,2021-11-15,,unknown,0,0,2021-11-08,88.4140033
+safegraph,restaurants_visit_prop,Restaurant Visits,AL,state,Alabama,2021-11-15,,unknown,0,0,2021-11-08,862.7125398
+fb-survey,smoothed_wwearing_mask_7d,People Wearing Masks,AL,state,Alabama,2021-11-15,47.5702396,steady,-1.5133889999999965,-0.030832867152776,2021-11-08,49.0836286
+fb-survey,smoothed_wothers_masked_public,People Wearing Masks,AL,state,Alabama,2021-11-15,47.5702396,steady,-1.5133889999999965,-0.030832867152776,2021-11-08,49.0836286
+fb-survey,smoothed_wcovid_vaccinated_appointment_or_accept,Vaccine Acceptance,AL,state,Alabama,2021-11-15,76.9880975,decreasing,-1.7253986000000054,-0.021919984316387198,2021-11-08,78.7134961
+fb-survey,smoothed_wcovid_vaccinated,Vaccine Acceptance,AL,state,Alabama,2021-11-15,76.9880975,decreasing,-1.7253986000000054,-0.021919984316387198,2021-11-08,78.7134961
+google-symptoms,sum_anosmia_ageusia_smoothed_search,COVID Symptom Searches on Google,AL,state,Alabama,2021-11-15,0.3157143,increasing,0.058571399999999996,0.22777762870372853,2021-11-08,0.2571429
+doctor-visits,smoothed_adj_cli,COVID-Related Doctor Visits,AL,state,Alabama,2021-11-15,1.349722,decreasing,-0.425918,-0.23986731544682482,2021-11-08,1.77564
+fb-survey,smoothed_wcli,COVID-Like Symptoms,AL,state,Alabama,2021-11-15,1.398779,increasing,0.08583190000000007,0.06537346401846666,2021-11-08,1.3129471
+fb-survey,smoothed_whh_cmnty_cli,COVID-Like Symptoms in Community,AL,state,Alabama,2021-11-15,18.4698155,decreasing,-0.35063339999999954,-0.018630448288616486,2021-11-08,18.8204489
+quidel,covid_ag_smoothed_pct_positive,COVID Antigen Test Positivity (Quidel),AL,state,Alabama,2021-11-15,3.6625936,decreasing,-0.13147069999999994,-0.03465167946679237,2021-11-08,3.7940643
+hospital-admissions,smoothed_adj_covid19_from_claims,Claims-Based COVID Hospital Admissions,AL,state,Alabama,2021-11-15,2.24631,decreasing,-0.7377660000000001,-0.24723431976933563,2021-11-08,2.984076
+jhu-csse,confirmed_7dav_incidence_prop,COVID Cases,AL,state,Alabama,2021-11-15,10.7341721,decreasing,-0.8504901,-0.07341518339654307,2021-11-08,11.5846622
+jhu-csse,deaths_7dav_incidence_prop,COVID Deaths,AL,state,Alabama,2021-11-15,0.4266964,decreasing,-0.3309074000000001,-0.43678160009229106,2021-11-08,0.7576038
