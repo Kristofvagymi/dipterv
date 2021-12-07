@@ -9,9 +9,10 @@ struct CustomDataLoader{D,R<:AbstractRNG}
     indices::Vector{Int}
     shuffle::Bool
     rng::R
+    mshoot_len::Int
 end
 
-function CustomDataLoader(data; batchsize=1, shuffle=false, partial=true, rng=GLOBAL_RNG)
+function CustomDataLoader(data; batchsize=1, shuffle=false, partial=true, rng=GLOBAL_RNG, mshoot_len = 2)
     batchsize > 0 || throw(ArgumentError("Need positive batchsize"))
 
     n = _nobs(data)
@@ -20,7 +21,7 @@ function CustomDataLoader(data; batchsize=1, shuffle=false, partial=true, rng=GL
         batchsize = n
     end
     imax = partial ? n : n - batchsize + 1
-    CustomDataLoader(data, batchsize, n, partial, imax, [1:n;], shuffle, rng)
+    CustomDataLoader(data, batchsize, n, partial, imax, [1:n;], shuffle, rng, mshoot_len)
 end
 
 Flux.Data.@propagate_inbounds function Base.iterate(d::CustomDataLoader, i=0)     # returns data in d.indices[i+1:i+batchsize]
@@ -33,11 +34,14 @@ Flux.Data.@propagate_inbounds function Base.iterate(d::CustomDataLoader, i=0)   
 
     modifiedIds = []
     for id in ids
-        push!(modifiedIds, id)
-        if id >= d.imax
-            push!(modifiedIds, id)
-        else
-            push!(modifiedIds, id + 1)
+        id = min(id, d.imax - mshoot_len + 1 )
+
+        for j in id:1:id + d.mshoot_len - 1
+            if j >= d.imax
+                push!(modifiedIds, id)
+            else
+                push!(modifiedIds, j)
+            end
         end
     end
     batch = _getobs(d.data, modifiedIds)
