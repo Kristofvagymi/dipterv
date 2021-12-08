@@ -118,17 +118,18 @@ function fit(data, numEpochs, lr = 0.0005, batch_size = 16, mshoot_len = 2, titl
   plotall(hcat(hcat(result.u...),hcat(result_v.u...)[:,1:size(validationData,2)]), hcat(data, validationData), size(data, 2), title)
 end
 
-lrs = [0.001, 0.0005, 0.0001, 0.00005]
-batch_sizes = [8, 16, 32]
+lrs = [0.005, 0.001, 0.0005, 0.0001, 0.00005]
+batch_sizes = [8, 16, 32, 64]
 mshoot_lens = [2, 2, 2, 2, 3, 4]
 dudt_sizes = [64, 32]
-epochs = [25, 50, 100, 200, 300, 500]
-data_batches = [ads[:,30:130], ads[:,100:270], ads[:,300:450], ads[:,450:580]]
-val_batches = [ads[:,131:180], ads[:,271:320], ads[:,451:500], ads[:,581:630]]
-data_names = ["30_130", "100_270", "300_450", "450_580"]
+epochs = [200, 300, 500, 800, 1000]
+data_batches = [ads[:,30:580]]
+val_batches = [ads[:,581:631]]
+data_names = ["full"]
 loss_methods = ["MSE", "RMSE"]
-loss_methods = [ "RMSE"]
-leg_paramsTried
+
+leg_paramsTried = vcat(leg_paramsTried, paramsTried)
+
 paramsTried = []
 for i in 1:1:200
   lr = lrs[rand(1:size(lrs,1))]
