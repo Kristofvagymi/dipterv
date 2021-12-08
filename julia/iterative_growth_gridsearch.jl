@@ -57,10 +57,14 @@ function loss_mshoot(batch)
   batch_size = floor(Int32,size(batch)[2] / mshoot_len)
   for index in range(1,step = mshoot_len, length = batch_size)
     pred = predict_mshoot(batch[:,index])
-    losVal +=  MSE(batch[:,index:index+mshoot_len - 1], pred[:,1:mshoot_len])
+    if loss_method == 'MSE'
+      losVal +=  MSE(batch[:,index:index+mshoot_len - 1], pred[:,1:mshoot_len])
+    else
+      losVal +=  RMSE(batch[:,index:index+mshoot_len - 1], pred[:,1:mshoot_len])
+    end
   end
 
-  return losVal# / batch_size
+  return losVal / batch_size
 end
 
 plotall = function (df1, df2, dash, title)
@@ -118,10 +122,11 @@ lrs = [0.001, 0.0005, 0.0001, 0.00005]
 batch_sizes = [8, 16, 32]
 mshoot_lens = [2, 2, 2, 2, 3, 4]
 dudt_sizes = [64, 32]
-epochs = [50, 100, 200, 300, 500]
+epochs = [25, 50, 100, 200, 300, 500]
 data_batches = [ads[:,30:130], ads[:,100:270], ads[:,300:450], ads[:,450:580]]
 val_batches = [ads[:,131:180], ads[:,271:320], ads[:,451:500], ads[:,581:630]]
 data_names = ["30_130", "100_270", "300_450", "450_580"]
+loss_methods = ["MSE", "RMSE"]
 
 paramsTried = []
 for i in 1:1:200
@@ -130,6 +135,7 @@ for i in 1:1:200
   global mshoot_len = mshoot_lens[rand(1:size(mshoot_lens,1))]
   dudt_size = dudt_sizes[rand(1:size(dudt_sizes,1))]
   epoch = epochs[rand(1:size(epochs,1))]
+  global loss_method = loss_methods[rand(1:size(loss_methods,1))]
 
   data_index = rand(1:size(data_batches,1))
   global trainingData = data_batches[data_index]
@@ -153,12 +159,13 @@ for i in 1:1:200
     else
       global dudt = FastChain(
         FastDense(8,32,swish),
-        FastDense(32,16,swish),
+        FastDense(32,24,swish),
+        FastDense(24,16,swish),
         FastDense(16,8))
 
       global θ = initial_params(dudt)
     end
-    mainTitle = "$data_name-lr_$lr-epoch_$epoch-dudtsize_$dudt_size-mshoot_lens_$mshoot_len-batch_size_$batch_size"
+    mainTitle = "avg_$method_$data_name-lr_$lr-epoch_$epoch-dudtsize_$dudt_size-mshoot_lens_$mshoot_len-batch_size_$batch_size"
 
     println(mainTitle)
 
