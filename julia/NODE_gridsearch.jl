@@ -12,9 +12,24 @@ Random.seed!(1234)
 df_input_mn = DataFrame
 df_input_ny = DataFrame
 df_input_mi = DataFrame
+rate_mi = DataFrame
+rate_mn = DataFrame
+rate_ny = DataFrame
+mins_mn = DataFrame
+mins_mi = DataFrame
+mins_ny = DataFrame
+
 df_input_mn = CSV.read("..\\python\\data\\adsmn.csv", df_input_mn)
 df_input_ny = CSV.read("..\\python\\data\\adsny.csv", df_input_ny)
 df_input_mi = CSV.read("..\\python\\data\\adsmi.csv", df_input_mi)
+
+rate_mi = CSV.read("..\\python\\data\\rate_mi.csv", rate_mi)
+rate_mn = CSV.read("..\\python\\data\\rate_mn.csv", rate_mn)
+rate_ny = CSV.read("..\\python\\data\\rate_ny.csv", rate_ny)
+
+mins_mi = CSV.read("..\\python\\data\\mins_mi.csv", mins_mi)
+mins_mn = CSV.read("..\\python\\data\\mins_mn.csv", mins_mn)
+mins_ny = CSV.read("..\\python\\data\\mins_ny.csv", mins_ny)
 
 df_input_mn = select!(df_input_mn, Not(:time_value))
 df_input_ny = select!(df_input_ny, Not(:time_value))
@@ -32,17 +47,6 @@ plot( Matrix(ads1) )
 
 ads = disallowmissing(transpose(Matrix(ads1)))
 
-lowerBound = 30
-upperBound = 130
-valLen = 30
-
-fullTrain = ads[:,lowerBound:upperBound]
-
-validationData = ads[:,upperBound + 1:upperBound + 1 + valLen]
-
-plot(transpose(hcat(fullTrain, validationData)), legend = false)
-vline!([upperBound - lowerBound],ls=:dash,c=:black)
-
 function dudt_(u,p,t)
     dudt(u, p)
 end
@@ -52,11 +56,11 @@ function cb()
   push!(val_losses, loss_mshoot(validationData))
 end
 
-RMSE(fact, predict) =sqrt( mean( (fact - predict) .* (fact - predict) ) )
+RMSE(fact, predict) = sqrt( mean( (fact - predict) .* (fact - predict) ) )
 
 MSE(fact, predict) = mean( (fact - predict) .* (fact - predict) )
 
-MAE(fact, predict) = mean( abs((fact - predict)) )
+MAE(fact, predict) = mean( abs.(fact .- predict) )
 
 function predict_mshoot(u)
     _prob = remake(prob,u0 = u,p = θ)
@@ -68,11 +72,11 @@ function loss_mshoot(batch)
   batch_size = floor(Int32,size(batch)[2] / mshoot_len)
   for index in range(1,step = mshoot_len, length = batch_size)
     pred = predict_mshoot(batch[:,index])
-    if loss_method == 'MSE'
+    if loss_method == "MSE"
       losVal +=  MSE(batch[:,index:index+mshoot_len - 1], pred[:,1:mshoot_len])
-    elseif loss_method == 'RMSE'
+    elseif loss_method == "RMSE"
       losVal +=  RMSE(batch[:,index:index+mshoot_len - 1], pred[:,1:mshoot_len])
-    elseif loss_method == 'MAE'
+    elseif loss_method == "MAE"
       losVal +=  MAE(batch[:,index:index+mshoot_len - 1], pred[:,1:mshoot_len])
     end
   end
@@ -87,8 +91,10 @@ plotall = function (df1, df2, dash, title)
   push!(pList, plot(title = title, grid = false, showaxis = false, ticks = false, titlefontsize = 8))
 
   for i in 1:1:size(columns,1)
-    p = plot(df1[i,:], title = columns_short[i], titlefontsize = 8, label="")
-    p = plot!(df2[i,:])
+    rateV = rates[!,columns[i]][1]
+    minV = mins[!,columns[i]][1]
+    p = plot(df1[i,:] .* rateV .+ minV, title = columns_short[i], titlefontsize = 8, label="")
+    p = plot!(df2[i,:] .* rateV .+ minV)
     p = vline!([dash],ls=:dash,c=:black)
 
     push!(pList, p)
@@ -98,14 +104,14 @@ plotall = function (df1, df2, dash, title)
 
   fullPlot = plot(pList..., legend = false, layout = l)
 
-  mkpath("plots/$title")
+  mkpath("plots/scaled/$title")
 
   randHash = bytes2hex(rand(UInt8, 4))
-  savefig(fullPlot,"plots/$title/$title-$randHash.png")
+  savefig(fullPlot,"plots/scaled/$title/$title-$randHash.png")
 
   plot(train_losses, label = "train", title = title, titlefontsize = 8)
   plt = plot!(val_losses, label = "validation")
-  savefig(plt,"plots/$title/$title-losses-$randHash.png")
+  savefig(plt,"plots/scaled/$title/$title-losses-$randHash.png")
 end
 
 function fit(data, numEpochs, lr = 0.0005, batch_size = 16, mshoot_len = 2, title = "")
@@ -114,8 +120,7 @@ function fit(data, numEpochs, lr = 0.0005, batch_size = 16, mshoot_len = 2, titl
 
   u0 = data[:,1]
   global prob = ODEProblem{false}(dudt_, u0, tspan, θ)
-  k = batch_size
-  train_loader = CustomDataLoader(data, batchsize = k, shuffle=true, mshoot_len = mshoot_len)
+  train_loader = CustomDataLoader(data, batchsize = batch_size, shuffle=true, mshoot_len = mshoot_len)
 
   opt = ADAM(lr)
   global trainingData = data
@@ -132,28 +137,37 @@ function fit(data, numEpochs, lr = 0.0005, batch_size = 16, mshoot_len = 2, titl
 end
 
 lrs = [0.001, 0.0005, 0.0001, 0.00005]
-batch_sizes = [8, 16, 32]
+batch_sizes = [4, 8, 16, 32]
 mshoot_lens = [2, 2, 2, 2, 3, 4]
-dudt_sizes = [64, 32]
-epochs = [50, 100, 200, 300, 500]
+dudt_sizes = [64, 48, 32]
+epochs = [200, 300, 500, 600]
 
+rates = rate_mn
+mins = mins_mn
 data_batches = [ads[:,30:130], ads[:,200:350]]
 val_batches = [ads[:,131:180], ads[:,350:400]]
 data_names = ["30_130", "200_350"]
 
+rates = rate_mi
+mins = mins_mi
+state = "MI"
 data_batches = [ads[:,30:130], ads[:,100:270], ads[:,300:450], ads[:,450:580]]
 val_batches = [ads[:,131:180], ads[:,271:320], ads[:,451:500], ads[:,581:630]]
 data_names = ["30_130", "100_270", "300_450", "450_580"]
 
 loss_methods = ["MSE", "RMSE","MAE"]
+tspan = (0.0f0,10.0f0)
 
 paramsTried = []
+paramsRes = []
+println("start")
 for i in 1:1:200
   lr = lrs[rand(1:size(lrs,1))]
   batch_size = batch_sizes[rand(1:size(batch_sizes,1))]
   global mshoot_len = mshoot_lens[rand(1:size(mshoot_lens,1))]
   dudt_size = dudt_sizes[rand(1:size(dudt_sizes,1))]
   epoch = epochs[rand(1:size(epochs,1))]
+
   global loss_method = loss_methods[rand(1:size(loss_methods,1))]
 
   data_index = rand(1:size(data_batches,1))
@@ -164,7 +178,6 @@ for i in 1:1:200
   current_param = (lr, batch_size, mshoot_len, dudt_size, epoch, data_index)
   if !(current_param in paramsTried)
     push!(paramsTried, current_param)
-    tspan = (0.0f0,10.0f0)
     global t = range(tspan[1], tspan[2], length=size(trainingData,2))
 
     if dudt_size == 64
@@ -175,7 +188,7 @@ for i in 1:1:200
         FastDense(16,8))
 
       global θ = initial_params(dudt)
-    else
+    elseif dudt_size == 32
       global dudt = FastChain(
         FastDense(8,32,swish),
         FastDense(32,24,swish),
@@ -183,11 +196,22 @@ for i in 1:1:200
         FastDense(16,8))
 
       global θ = initial_params(dudt)
+    elseif dudt_size == 48
+      global dudt = FastChain(
+        FastDense(8,48,swish),
+        FastDense(48,36,swish),
+        FastDense(36,24,swish),
+        FastDense(24,12,swish),
+        FastDense(12,8))
+
+      global θ = initial_params(dudt)
     end
-    mainTitle = "NY_avg_$loss_method-$data_name-lr_$lr-epoch_$epoch-dudtsize_$dudt_size-mshoot_lens_$mshoot_len-batch_size_$batch_size"
+    mainTitle = "$state-avg_$loss_method-$data_name-lr_$lr-epoch_$epoch-dudtsize_$dudt_size-mshoot_lens_$mshoot_len-batch_size_$batch_size"
 
     println(mainTitle)
 
     fit(trainingData, epoch, lr, batch_size, mshoot_len, mainTitle)
+
+    push!(paramsRes,(lr, batch_size, mshoot_len, dudt_size, epoch, data_index, loss_mshoot(trainingData), loss_mshoot(validationData)))
   end
 end

@@ -29,12 +29,12 @@ Flux.Data.@propagate_inbounds function Base.iterate(d::CustomDataLoader, i=0)   
     if d.shuffle && i == 0
         shuffle!(d.rng, d.indices)
     end
-    nexti = min(i + d.batchsize, d.nobs)
+    nexti = Base.min(i + d.batchsize, d.nobs)
     ids = d.indices[i+1:nexti]
 
     modifiedIds = []
     for id in ids
-        id = min(id, d.imax - mshoot_len + 1 )
+        id = Base.min(id, d.imax - mshoot_len + 1 )
 
         for j in id:1:id + d.mshoot_len - 1
             if j >= d.imax
