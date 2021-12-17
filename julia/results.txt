@@ -1,0 +1,1 @@
+("state", "loss_method", "data_name", "lr", "batch_size", "mshoot_len", "dudt_size", "epoch", "loss_mshoot(trainingData)", "loss_mshoot(validationData)")
